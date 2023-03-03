@@ -1,0 +1,225 @@
+/*
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+*/
+import { Alchemy, Network } from 'alchemy-sdk';
+import React, { Component } from 'react'
+
+import './App.css';
+
+const settings = {
+  apiKey: process.env.REACT_APP_ALCHEMY_API_KEY,
+  network: Network.ETH_MAINNET,
+};
+
+const alchemy = new Alchemy(settings);
+
+/* Pure React Component that constructs a clickable list of 
+ * blocks */
+const BlockList = (props) => {
+  const { initialBNumber,  // initial block# of the list
+          selectedBNumber, // current selectedblock#   
+          handleBNumberClick, // function handler
+        } = props
+  /* starting from the given selectedBNumber until 7 blocks below */ 
+  // populate an array
+  let listOfBNumbers = [];
+  for(let i = initialBNumber; (i>(initialBNumber - 11) && i>0); i--) {
+    listOfBNumbers.push(i);
+  }  
+
+  const listOfBNumbersItems = listOfBNumbers.map(n => {
+    if(n === selectedBNumber) {
+        return <button  key={n}
+                        type="button"
+                        className="link-button-selected"
+                        onClick={() => handleBNumberClick(n)}>
+                          Block #{n}
+                </button>
+    }
+    return  <button  key={n}
+                      type="button"
+                      className="link-button"
+                      onClick={() => handleBNumberClick(n)}>
+                        Block #{n}
+             </button> 
+  })
+
+  return listOfBNumbersItems;
+  //return (<div>hahaha este esuncomponente</div>)
+}
+
+/* TxDetails
+ * 
+ * Pure React Component that show the given 
+ * details of transaction */
+const TxDetails = (props) => {
+  const { selectedTx } = props
+  if(selectedTx) {
+    return (
+      <>
+        <h3>Transaction: {selectedTx.hash.slice(0, 18)}...</h3>
+        <div>From: {selectedTx.from}</div>
+        <div>To: {selectedTx.to}</div>
+        <div>Amount (in WEIS hex): {selectedTx.value._hex}</div>
+        <div>Gas Price (in WEIS hex): {selectedTx.gasPrice._hex}</div>
+        <div>Max Fee Per Gas (in WEIS hex): 
+        {selectedTx.maxFeePerGas && selectedTx.maxFeePerGas._hex /*
+          This is a hack to not evaluate maxFeePerGas if not exists.
+          Doing that results in a blank screen! 
+          Thanks Dan Nolan */}</div>
+        <div>Nonce: {selectedTx.nonce}</div>
+        <div>Block Number: {selectedTx.blockNumber}</div>
+        <div>Chain id: {selectedTx.chainId}</div>
+        <div>Confirmations: {selectedTx.confirmations}</div>
+      </>);
+  } else {
+    return (
+      <>
+        <h2>- click on a transaction -</h2>
+      </>);
+  } 
+}
+
+
+class App extends Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      nBlocksToDisplay: 2,
+      promiseBNumber: null,
+      initialBNumber: -1,
+      selectedBNumber: -1,
+      blockInfo: false,
+      promiseBlockInfo: null,
+      selectedTx: false,
+    }
+    this.startEthFetcherBinded = this.startEthFetcher.bind(this)
+    this.startEthFetcherBinded()
+  }
+
+  startEthFetcher(){
+    setInterval(() => {
+      this.state.promiseBNumber = alchemy.core.getBlockNumber()
+      this.state.promiseBNumber.then((bN) => {      
+          /*
+          the callback function inside then() should be 
+          an arrow function (for a correct binding of this)
+          and promise's return value is the variable declared 
+                                          (in this case bN)
+          */
+          if(bN > this.state.initialBNumber) {
+            const currentNBlocksToDisplay = this.state.nBlocksToDisplay
+            this.setState({ initialBNumber: bN,
+                            nBlocksToDisplay: currentNBlocksToDisplay + 1,})
+
+            //console.log('Resolved then() method and the new state is', this.state)
+          }})
+    }, 4000)
+  }
+
+  async handleBNumberClick(n) {
+    this.setState({ selectedBNumber: n, 
+                    blockInfo: false, 
+                    selectedTx: false,
+                  })
+    this.state.promiseBlockInfo = alchemy.core.getBlockWithTransactions(this.state.selectedBlockNumber);
+    this.state.promiseBlockInfo.then((block) => {   this.setState( {blockInfo: block} )   })
+  }
+  
+  handleTxClick(tx) {
+    this.setState({selectedTx: tx})
+    console.log('handleTxClick() <- clicked this.state is', this.state)
+  }
+
+  render() {
+    if(this.state.initialBNumber === -1) {
+        return ( <div>...waiting...</div> )      
+    } else { 
+      /* DISPLAY BLOCKCHAIN INFO */
+      
+      /* Construct a clickable list of blocks, 
+       * starting from the given selectedBNumber until 50 blocks below */ 
+    console.log('render() this.state is', this.state)
+
+     let listOfBlockNumbers = [];
+     for(let i = this.state.initialBNumber; 
+         (i>(this.state.initialBNumber - this.state.nBlocksToDisplay) && i>0);
+          i--) {
+        listOfBlockNumbers.push(i);
+      }  
+      const listOfBlockNumberItems = listOfBlockNumbers.map(n => {
+        if(n === this.state.selectedBNumber) {
+            return <button  key={n}
+                            type="button"
+                            className="block-button-selected"
+                            onClick={() => this.handleBNumberClick(n)}>
+                              Block #{n}
+                    </button>
+        }
+        return  <button  key={n}
+                          type="button"
+                          className="block-button"
+                          onClick={() => this.handleBNumberClick(n)}>
+                            Block #{n}
+                 </button> 
+      })
+      console.log('render() blockInfo is', this.state.blockInfo);
+      
+      const isBlockInfoWaiting = false;
+      let listOfTx = '- select a block -'
+      
+      /* Construct a clickable list of transactions */ 
+      if(this.state.blockInfo) { // execute if the blockchain already answered 
+        const blockInfoTxs = this.state.blockInfo.transactions;
+        listOfTx = blockInfoTxs.map((tx) => {
+            if(tx.hash === this.state.selectedTx.hash) {
+              return (<button key={tx.hash}
+                            className="tx-button-selected"
+                            onClick={ () => this.handleTxClick(tx) } 
+                            >Transaction: {tx.hash.slice(0, 30)}...
+                    </button>);
+            }
+            return (<button key={tx.hash}
+                            className="tx-button"
+                            onClick={ () => this.handleTxClick(tx) } 
+                            >Transaction: {tx.hash.slice(0, 30)}...
+                    </button>);
+        })
+        console.log('render() blockInfoTxs', blockInfoTxs);
+      }
+      return (
+        <>
+          <span className="columnLeft">
+            {listOfBlockNumberItems}
+          </span>
+          <span className="columnMiddle">
+            {(() => {
+                console.log('IIFE() this is', this.state)
+                if(this.state.blockInfo === false) {
+                  return <h2>- Select a block -</h2>;
+                } else { 
+                  return listOfTx;
+                }
+              })()}
+          </span>
+          <span className="columnRight">
+            <TxDetails selectedTx={this.state.selectedTx} /> 
+          </span>
+        </>
+        )
+    }
+  }
+}
+/*
+            {isBlockInfoWaiting ? '<><p/><p/><h2>- click on a block -</h2></> Click on a block number' : listOfTx} 
+          
+          <span className="columnLeft">
+            <BlockList  initialBNumber={this.state.initialBNumber}
+                        selectedBNumber={this.state.selectedBNumber}
+                        handleBNumberClick={this.handleBNumberClick}
+            />
+          </span>
+*/
+
+export default App
