@@ -1,3 +1,13 @@
+# Live ETH BlockExplorer
+
+A minimalistic deployment of Ethereum's Block Explorer for learning purposes.
+
+## How to use
+
+- First clone this repository
+- Start the server by running `npx start` in the project directory. Leave this process running
+- In another window run `npm init` to start the client
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
