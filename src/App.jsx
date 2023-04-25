@@ -42,7 +42,7 @@ const TxDetails = (props) => {
   } else {
     return (
       <>
-        <h2>- click on a transaction -</h2>
+        <h2>2. Select a transaction</h2>
       </>);
   } 
 }
@@ -152,7 +152,7 @@ class App extends Component {
       /* If a block has been selected, 
        *   we render a clickable list of transactions.
        * If not, we render an appropriate message */ 
-      let listOfTx = '- select a block -'      
+      let listOfTx = '<H2>Live ETH Explorer</H2><- select a block -'      
       if(this.state.blockInfo) { // execute if the blockchain already answered 
         const blockInfoTxs = this.state.blockInfo.transactions;
         listOfTx = blockInfoTxs.map((tx) => {
@@ -179,9 +179,12 @@ class App extends Component {
           </span>
           <span className="columnMiddle">
             {(() => {
-                console.log('IIFE() arrow function: this is', this.state)
+                /*console.log('IIFE() arrow function: this is', this.state)*/
                 if(this.state.blockInfo === false) {
-                  return <h2>- Select a block -</h2>;
+                  return [
+                    (<h1>Live ETH BlockExplorer</h1>), 
+                    (<>Blockchains live in the backend of cryptocurrencies. They register transactions in a chain of blocks updated continously, worldwide. Bitcoin was built on top of a Blockchain. Here you can see the actual blocks and transactions of the Ethereum ecosystem.</>), 
+                    (<h2> 1. Click on a block on the left </h2>)];
                 } else { 
                   return listOfTx;
                 }
