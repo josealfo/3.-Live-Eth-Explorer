@@ -6,6 +6,7 @@ import { Alchemy, Network } from 'alchemy-sdk';
 import React, { Component } from 'react'
 
 import './App.css';
+import newBlockImage from './newBlockAnimated.gif';
 
 const settings = {
   apiKey: process.env.REACT_APP_ALCHEMY_API_KEY,
@@ -25,9 +26,14 @@ const TxDetails = (props) => {
     return (
       <>
         <h3>Transaction: {selectedTx.hash.slice(0, 18)}...</h3>
-        <div>From: {selectedTx.from}</div>
-        <div>To: {selectedTx.to}</div>
-        <div>Amount (in WEIS hex): {selectedTx.value._hex}</div>
+        <center>
+          <div>From:</div><div>{selectedTx.from}</div>
+          <p></p>
+          <div>To:</div><div>{selectedTx.to}</div>
+          <p></p>
+          <div>Amount (in WEIS hex):</div><div>{selectedTx.value._hex}</div>
+        </center>
+        <p></p>
         <div>Gas Price (in WEIS hex): {selectedTx.gasPrice._hex}</div>
         <div>Max Fee Per Gas (in WEIS hex): 
         {selectedTx.maxFeePerGas && selectedTx.maxFeePerGas._hex /*
@@ -175,6 +181,7 @@ class App extends Component {
       return (
         <>
           <span className="columnLeft">
+          <img src={newBlockImage} alt="New block being minned..."/>
             {listOfBlockNumberItems}
           </span>
           <span className="columnMiddle">
@@ -183,7 +190,7 @@ class App extends Component {
                 if(this.state.blockInfo === false) {
                   return [
                     (<h1>Live ETH BlockExplorer</h1>), 
-                    (<>Blockchains live in the backend of cryptocurrencies. They register transactions in a chain of blocks updated continously, worldwide. Bitcoin was built on top of a Blockchain. Here you can see the actual blocks and transactions of the Ethereum ecosystem.</>), 
+                    (<>Blockchains live in the backend of cryptocurrencies. They register transactions in a chain of blocks updated continously, worldwide. Bitcoin was built on top of a Blockchain. Here you can see the actual blocks and transactions of the Ethereum ecosystem.  Information is encrypted for security. This quantities are in real-time. </>), 
                     (<h2> 1. Click on a block on the left </h2>)];
                 } else { 
                   return listOfTx;
